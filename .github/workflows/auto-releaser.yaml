@@ -29,7 +29,7 @@ jobs:
         with:
           bump: ${{ steps.bump.outputs.match }}
           prefix: v
-          github_token: ${{ secrets.GITHUB_TOKEN }
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout repository
         uses: actions/checkout@v3
