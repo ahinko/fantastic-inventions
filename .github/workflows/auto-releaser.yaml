@@ -13,13 +13,12 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build:
+  tag:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-
     if: github.event.pull_request.merged
+
+    outputs:
+      new_version: ${{ steps.next_version.outputs.version_tag }}
 
     steps:
       - name: Find version increment (major, minor or patch) based on tags on pull request
@@ -36,10 +35,18 @@ jobs:
           prefix: v
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
+  build:
+    needs: tag
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          ref: ${{ steps.next_version.outputs.version_tag }}
+          ref: ${{needs.tag.outputs.output1}}
 
       - name: Log in to the Container registry
         uses: docker/login-action@v2
@@ -47,8 +54,6 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-        env:
-          VERSION: ${{ steps.next_version.outputs.version_tag }}
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
@@ -61,5 +66,5 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ steps.next_version.outputs.version_tag }}
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
