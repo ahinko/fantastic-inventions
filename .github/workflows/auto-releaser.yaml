@@ -27,13 +27,33 @@ jobs:
         with:
           allowed: major, minor, patch
 
-      - name: Create tag/release
+      - name: Calculate next version number
         id: next_version
         uses: zwaldowski/semver-release-action@v3
         with:
           bump: ${{ steps.bump.outputs.match }}
           prefix: v
+          dry_run: true
           github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create new release
+        uses: "actions/github-script@v6"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            try {
+              await github.rest.repos.createRelease({
+                draft: false,
+                generate_release_notes: true,
+                name: ${{ steps.next_version.outputs.version_tag }},
+                owner: context.repo.owner,
+                prerelease: false,
+                repo: context.repo.repo,
+                tag_name: ${{ steps.next_version.outputs.version_tag }},
+              });
+            } catch (error) {
+              core.setFailed(error.message);
+            }
 
   build:
     needs: tag
