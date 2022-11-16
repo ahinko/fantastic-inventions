@@ -80,7 +80,7 @@ jobs:
             }
 
   build:
-    needs: tag
+    needs: release
     runs-on: ubuntu-latest
     permissions:
       contents: read
